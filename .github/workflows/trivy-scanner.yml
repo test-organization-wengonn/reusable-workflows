@@ -53,6 +53,7 @@ jobs:
           exit-code: '0'
           vuln-type: 'os,library'
           severity: 'UNKNOWN,CRITICAL,HIGH'
+          hide-progress: 'true'
 
       - name: Parse Trivy JSON Scan File
         run: |
