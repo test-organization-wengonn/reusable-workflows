@@ -126,16 +126,10 @@ jobs:
                         "value": "The findings located at `Job Url` -> `Run Trivy container image scanner - Table Format`"
                       },
                       {
-                        "value": "---------------------"
+                        "value": "WikiJS Doc: <https://wikijs.deriv.cloud/en/Security/product-security/trivy-alert-fixes|Trivy WikiJs Documentation>"
                       },
                       {
                         "value": "`JOB URL:` ${{ env.TRIVY_JOB_URL || env.JOB_URL_NOT_FOUND }}\n\n`Pull Request:` ${{ env.TRIVY_PR_URL }}\n\n`PR Creator:` *${{ env.TRIVY_PR_CREATOR }}*\n\n`Latest Committer:` *${{ env.TRIVY_SENDER }}*\n\n`Scan Summary:` ${{ env.TRIVY_SCAN_SUMMARY }}"
-                      },
-                      {
-                        "value": "---------------------"
-                      },
-                      {
-                        "value": "WikiJS Doc: <https://wikijs.deriv.cloud/en/Security/product-security/trivy-alert-fixes|Trivy WikiJs Documentation>"
                       }
                     ]
                 }
