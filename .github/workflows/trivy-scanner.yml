@@ -117,11 +117,6 @@ jobs:
           # For posting a rich message using Block Kit
           payload: |
             {
-              "attachments": [
-                {
-                  "color": "#F8A90B"
-                }
-              ],
               "blocks": [
                 {
                   "type": "section",
