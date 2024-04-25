@@ -41,6 +41,7 @@ jobs:
           exit-code: '0'
           vuln-type: 'os,library'
           severity: 'UNKNOWN,CRITICAL,HIGH'
+          hide-progress: true
 
       - name: Run Trivy container image scanner - JSON Format
         uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # 132 commits
@@ -53,7 +54,7 @@ jobs:
           exit-code: '0'
           vuln-type: 'os,library'
           severity: 'UNKNOWN,CRITICAL,HIGH'
-          hide-progress: 'true'
+          hide-progress: true
 
       - name: Parse Trivy JSON Scan File
         run: |
