@@ -135,7 +135,7 @@ jobs:
                         "value": "---------------------"
                       },
                       {
-                        "value": "WikiJS Doc: <Replace with wikijs link>"
+                        "value": "WikiJS Doc: <https://wikijs.deriv.cloud/en/Security/product-security/trivy-alert-fixes|Trivy WikiJs Documentation>"
                       }
                     ]
                 }
