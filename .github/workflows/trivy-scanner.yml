@@ -129,7 +129,7 @@ jobs:
                         "value": "`JOB URL:` ${{ env.TRIVY_JOB_URL || env.JOB_URL_NOT_FOUND }}\n\n`Pull Request:` ${{ env.TRIVY_PR_URL }}\n\n`PR Creator:` *${{ env.TRIVY_PR_CREATOR }}*\n\n`Latest Committer:` *${{ env.TRIVY_SENDER }}*\n\n`Scan Summary:` ${{ env.TRIVY_SCAN_SUMMARY }}"
                       },
                       {
-                        "value": "\n\WikiJS Doc: <Replace with wikijs link>"
+                        "value": "\n\nWikiJS Doc: <Replace with wikijs link>"
                       }
                     ]
                 }
