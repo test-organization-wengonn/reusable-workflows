@@ -1,0 +1,134 @@
+name: Trivy Scanner
+
+on:
+  workflow_call:
+    secrets:
+      SAST_SECURITY_SLACK_WEBHOOK: 
+        required: true
+        description: "Webhook for Security Team's Slack Channel to send alerts on failed scans"
+
+jobs:
+  trivy_scan:
+    permissions:
+      contents: read
+      actions: read
+    
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SAST_SECURITY_SLACK_WEBHOOK }}
+      SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+      TRIVY_PR_URL: ${{ github.event.pull_request.html_url }}
+      TRIVY_PR_CREATOR: ${{ github.event.pull_request.user.login }}
+      TRIVY_HEAD_COMMIT: ${{ github.event.pull_request.html_url }}/commits/${{ github.event.pull_request.head.sha }}
+      TRIVY_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      TRIVY_SENDER: ${{ github.event.sender.login }}
+      JOB_URL_NOT_FOUND: "*Job URL not found, Please Visit the Workflow URL to review failed checks...*"
+      TRIVYSCAN_FAILED: false
+      TRIVY_SCAN_SUMMARY: "No Results Found"
+      
+    name: Repository Configuration Scan
+    runs-on: "ubuntu-22.04"
+    steps:
+      - name: Checkout code v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - name: Run Trivy container image scanner - Table Format
+        uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # 132 commits
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          scanners: 'vuln,secret,misconfig'
+          exit-code: '0'
+          vuln-type: 'os,library'
+          severity: 'UNKNOWN,CRITICAL,HIGH'
+
+      - name: Run Trivy container image scanner - JSON Format
+        uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # 132 commits
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'json'
+          output: 'trivy-scan-result.json'
+          scanners: 'vuln,secret,misconfig'
+          exit-code: '0'
+          vuln-type: 'os,library'
+          severity: 'UNKNOWN,CRITICAL,HIGH'
+
+      - name: Parse Trivy JSON Scan File
+        run: |
+          
+          SCAN_FILE="trivy-scan-result.json"
+          echo "Extracting failed checks for ----${SCAN_FILE}----"
+          
+          scan_failed=false
+          misconfigs_count=0
+          secrets_count=0
+          cves_count=0
+          total_vuln_count=0
+          
+          results_found=$(cat ${SCAN_FILE} | jq 'select(.Results[]?)')
+          if [[ -z "${results_found}" ]]; then
+              echo "Scan Passed: No Results Found"
+              exit 0
+          fi
+          
+          misconfigs_count=$(cat ${SCAN_FILE} | jq -r '.Results[]?.MisconfSummary?.Failures? | length' | awk '{sum+=$1} END {print sum}')
+          
+          secrets_found=$(cat ${SCAN_FILE} | jq '.Results[]? | select(.Class=="secret")')
+          if [[ ! -z "${secrets_found}" ]]; then
+              secrets_count=$(cat ${SCAN_FILE} | jq '.Results[]? | select(.Class=="secret")' | jq -s 'length')
+          fi
+          
+          cves_count=$(cat ${SCAN_FILE} | jq -r '.Results[]?.Vulnerabilities? | length' | awk '{sum+=$1} END {print sum}')
+
+          total_vuln_count=$(( $misconfigs_count + $secrets_count + $cves_count ))
+
+          if [[ "${total_vuln_count}" -gt 0 ]]; then
+              scan_failed=true
+              echo "TRIVY_SCAN_FAILED=${scan_failed}" >> $GITHUB_ENV
+              echo "Scan Failed"
+              scan_summary="\n *Total Vuln Count: $total_vuln_count*\n *Breakdown:*\n\t *Misconfigurations: $misconfigs_count*\n\t *Secrets: $secrets_count*\n\t *CVEs: $cves_count*"
+              echo -e ${scan_summary}
+              echo "TRIVY_SCAN_SUMMARY=${scan_summary}" >> $GITHUB_ENV
+          else
+              echo "Scan Passed: No Checks Failed after analyzing Results"
+          fi
+          
+      - name: Extract Job URL
+        if: ${{ env.TRIVY_SCAN_FAILED == 'true' &&  github.event.action == 'opened' }}
+        run: |
+          job_id=$(curl -L \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}/jobs | jq '.jobs[]? | select(.name=="trivy_scanner / Repository Configuration Scan") | .id')
+            
+          if [[ ! -z ${job_id} && ${job_id} != "null" ]]; then
+            job_url="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${job_id}"
+            echo "TRIVY_JOB_URL=${job_url}" >> $GITHUB_ENV   
+          fi
+          
+      - name: Send custom JSON data to Slack workflow
+        if: ${{ env.TRIVY_SCAN_FAILED  == 'true' &&  github.event.action == 'opened' }}
+        uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001 # v1.25.0
+        with:
+          # For posting a rich message using Block Kit
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":red-alert: *Trivy Scan Failed*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "`Workflow Run:` ${{ env.TRIVY_WORKFLOW_RUN_URL }}\n\n`JOB URL:` ${{ env.TRIVY_JOB_URL || env.JOB_URL_NOT_FOUND }}\n\n`Pull Request:` ${{ env.TRIVY_PR_URL }}\n\n`Head Commit:` ${{ env.TRIVY_HEAD_COMMIT }}\n\n`PR Creator:` *${{ env.TRIVY_PR_CREATOR }}*\n\n`Latest Committer:` *${{ env.TRIVY_SENDER }}*\n\n`Scan Summary:` ${{ env.TRIVY_SCAN_SUMMARY }}"
+                  }
+                }
+              ]
+            }
