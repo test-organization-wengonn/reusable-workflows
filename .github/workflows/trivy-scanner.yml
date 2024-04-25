@@ -117,7 +117,7 @@ jobs:
           # For posting a rich message using Block Kit
           payload: |
             {
-              "text": ":red-alert: *Trivy Scan Failed*,
+              "text": ":red-alert: *Trivy Scan Failed*",
               "attachments": [
                 {
                   "color": "#F8A90B",
