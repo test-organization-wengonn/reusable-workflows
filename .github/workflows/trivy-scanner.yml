@@ -129,7 +129,8 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "`Workflow Run:` ${{ env.TRIVY_WORKFLOW_RUN_URL }}\n\n`JOB URL:` ${{ env.TRIVY_JOB_URL || env.JOB_URL_NOT_FOUND }}\n\n`Pull Request:` ${{ env.TRIVY_PR_URL }}\n\n`Head Commit:` ${{ env.TRIVY_HEAD_COMMIT }}\n\n`PR Creator:` *${{ env.TRIVY_PR_CREATOR }}*\n\n`Latest Committer:` *${{ env.TRIVY_SENDER }}*\n\n`Scan Summary:` ${{ env.TRIVY_SCAN_SUMMARY }}"
+                    "color": "#F8A90B",
+                    "text": "`JOB URL:` ${{ env.TRIVY_JOB_URL || env.JOB_URL_NOT_FOUND }}\n\n`Pull Request:` ${{ env.TRIVY_PR_URL }}\n\n`PR Creator:` *${{ env.TRIVY_PR_CREATOR }}*\n\n`Latest Committer:` *${{ env.TRIVY_SENDER }}*\n\n`Scan Summary:` ${{ env.TRIVY_SCAN_SUMMARY }}"
                   }
                 }
               ]
