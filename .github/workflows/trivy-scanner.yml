@@ -118,7 +118,9 @@ jobs:
           payload: |
             {
               "attachments": [
-                "color": "#F8A90B"
+                {
+                  "color": "#F8A90B"
+                }
               ],
               "blocks": [
                 {
