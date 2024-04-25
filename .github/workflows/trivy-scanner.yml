@@ -123,10 +123,10 @@ jobs:
                   "color": "#F8A90B",
                   "fields": [
                       {
-                        "value": "To view the alerts, go to `workflow run`, open the workflow and navigate to `Run Trivy container image scanner - Table Format`"
+                        "value": "The findings located at `workflow run` -> `workflow job` -> `Run Trivy container image scanner - Table Format`"
                       },
                       {
-                        "value": "/--------------------------------------------------------------/"
+                        "value": "\n\n"
                       },
                       {
                         "value": "`Workflow Run:` ${{ env.TRIVY_WORKFLOW_RUN_URL }}\n\n`Pull Request:` ${{ env.TRIVY_PR_URL }}\n\n`PR Creator:` *${{ env.TRIVY_PR_CREATOR }}*\n\n`Latest Committer:` *${{ env.TRIVY_SENDER }}*\n\n`Scan Summary:` ${{ env.TRIVY_SCAN_SUMMARY }}"
