@@ -45,6 +45,10 @@ jobs:
         graudit -B -d "${{ github.workspace }}/graudit/signatures/asp.db" -x "*/Backup/*,*.bak,*Copy*,*.exe" . 2>&1 | tee "${{ github.workspace }}/base.log"
       shell: bash
 
+    - name: test
+      run: | 
+        sed -r -i 's/[-:][0-9]+[-:]/ /g' "${{ github.workspace }}/head.log"
+
     - name: Compare scan results
       run: |
         set -e
