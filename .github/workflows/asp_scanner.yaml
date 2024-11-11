@@ -13,14 +13,12 @@ jobs:
     - name: Checkout PR code
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0 
         ref: ${{ github.event.pull_request.head.sha }}
         path: head
 
     - name: Checkout base branch code
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0 
         ref: ${{ github.event.pull_request.base.ref }}
         path: base
 
