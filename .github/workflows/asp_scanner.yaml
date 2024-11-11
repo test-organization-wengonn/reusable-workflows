@@ -33,14 +33,12 @@ jobs:
 
     - name: Run Graudit scan on PR code
       run: |
-        set -e
         cd "${{ github.workspace }}/head"
         graudit -B -d "${{ github.workspace }}/graudit/signatures/asp.db" -x "*/Backup/*,*.bak,*Copy*,*.exe" . > "${{ github.workspace }}/head.log"
       shell: bash
 
     - name: Run Graudit scan on base branch code
       run: |
-        set -e
         cd "${{ github.workspace }}/base"
         graudit -B -d "${{ github.workspace }}/graudit/signatures/asp.db" -x "*/Backup/*,*.bak,*Copy*,*.exe" . > "${{ github.workspace }}/base.log"
       shell: bash
