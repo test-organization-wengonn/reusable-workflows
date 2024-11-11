@@ -1,66 +1,60 @@
-name: ASP Security Checks
-'on':
+name: Graudit Scan on PR
+
+on:
   pull_request:
     branches:
-      - main
       - master
+      - main
+
 jobs:
   graudit_scan:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout PR code
-        uses: actions/checkout@v3
-        with:
-          ref: '${{ github.event.pull_request.head.sha }}'
-          path: head
-      - name: Checkout base branch code
-        uses: actions/checkout@v3
-        with:
-          ref: '${{ github.event.pull_request.base.ref }}'
-          path: base
-      - name: Setup Graudit CLI
-        run: >
-          set -e
-  
-          git clone https://github.com/wireghoul/graudit.git "${{ github.workspace
-          }}/graudit"
-  
-          cd graudit
-  
-          git checkout 132db329a68ee64b147d1b6c91d26e242940a2ec
-  
-          echo "${{ github.workspace }}/graudit" >> $GITHUB_PATH
-        shell: bash
-      - name: Run Graudit scan on PR code
-        run: >
-          set -e
-  
-          cd "${{ github.workspace }}/head"
-  
-          graudit -B -d "${{ github.workspace }}/graudit/signatures/asp.db" -x
-          "*/Backup/*,*.bak,*Copy*,*.exe" . > "${{ github.workspace }}/head.log"
-        shell: bash
-      - name: Run Graudit scan on base branch code
-        run: >
-          set -e
-  
-          cd "${{ github.workspace }}/base"
-  
-          graudit -B -d "${{ github.workspace }}/graudit/signatures/asp.db" -x
-          "*/Backup/*,*.bak,*Copy*,*.exe" . > "${{ github.workspace }}/base.log"
-        shell: bash
-      - name: Compare scan results
-        run: >
-          set -e
-  
-          diff -u "${{ github.workspace }}/base.log" "${{ github.workspace
-          }}/head.log" > "${{ github.workspace }}/new_issues.log" || true
-  
-          if [ -s "${{ github.workspace }}/new_issues.log" ]; then
-            echo "New issues found in the PR code:"
-            cat "${{ github.workspace }}/new_issues.log"
-            exit 1
-          else
-            echo "No new issues introduced by the PR"
-          fi
-        shell: bash
+    - name: Checkout PR code
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        path: head
+
+    - name: Checkout base branch code
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.base.ref }}
+        path: base
+
+    - name: Setup Graudit CLI
+      run: |
+        set -e
+        git clone https://github.com/wireghoul/graudit.git "${{ github.workspace }}/graudit"
+        cd graudit
+        git checkout 132db329a68ee64b147d1b6c91d26e242940a2ec
+        echo "${{ github.workspace }}/graudit" >> $GITHUB_PATH
+      shell: bash
+
+    - name: Run Graudit scan on PR code
+      run: |
+        set -e
+        cd "${{ github.workspace }}/head"
+        graudit -B -d "${{ github.workspace }}/graudit/signatures/asp.db" -x "*/Backup/*,*.bak,*Copy*,*.exe" . > "${{ github.workspace }}/head.log"
+      shell: bash
+
+    - name: Run Graudit scan on base branch code
+      run: |
+        set -e
+        cd "${{ github.workspace }}/base"
+        graudit -B -d "${{ github.workspace }}/graudit/signatures/asp.db" -x "*/Backup/*,*.bak,*Copy*,*.exe" . > "${{ github.workspace }}/base.log"
+      shell: bash
+
+    - name: Compare scan results
+      run: |
+        set -e
+        diff -u "${{ github.workspace }}/base.log" "${{ github.workspace }}/head.log" > "${{ github.workspace }}/new_issues.log" || true
+        if [ -s "${{ github.workspace }}/new_issues.log" ]; then
+          echo "New issues found in the PR code:"
+          cat "${{ github.workspace }}/new_issues.log"
+          exit 1
+        else
+          echo "No new issues introduced by the PR"
+        fi
+      shell: bash
