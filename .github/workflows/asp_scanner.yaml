@@ -35,14 +35,14 @@ jobs:
       run: |
         set -e
         cd "${{ github.workspace }}/head"
-        graudit -B -d "${{ github.workspace }}/graudit/signatures/asp.db" -x "*/Backup/*,*.bak,*Copy*,*.exe" . > "${{ github.workspace }}/head.log"
+        graudit -B -d "${{ github.workspace }}/graudit/signatures/asp.db" -x "*/Backup/*,*.bak,*Copy*,*.exe" . 2>&1 | tee "${{ github.workspace }}/head.log"
       shell: bash
 
     - name: Run Graudit scan on base branch code
       run: |
         set -e
         cd "${{ github.workspace }}/base"
-        graudit -B -d "${{ github.workspace }}/graudit/signatures/asp.db" -x "*/Backup/*,*.bak,*Copy*,*.exe" . > "${{ github.workspace }}/base.log"
+        graudit -B -d "${{ github.workspace }}/graudit/signatures/asp.db" -x "*/Backup/*,*.bak,*Copy*,*.exe" . 2>&1 | tee "${{ github.workspace }}/base.log"
       shell: bash
 
     - name: Compare scan results
