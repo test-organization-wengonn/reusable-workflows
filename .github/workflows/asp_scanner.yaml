@@ -48,7 +48,8 @@ jobs:
     - name: test
       run: | 
         set -x
-        cat "${{ github.workspace }}/head.log" | sed -r 's/[-:][0-9]+[-:]/ /g' 
+        awk '{ gsub(/[-:][0-9]+[-:]/, " "); print }' "${{ github.workspace }}/head.log" > "${{ github.workspace }}/head_cleaned.log"
+        cat "${{ github.workspace }}/head_cleaned.log"
 
     - name: Compare scan results
       run: |
