@@ -64,6 +64,7 @@ jobs:
         if [ -s "${{ github.workspace }}/new_issues.log" ]; then
           echo "New issues found in the PR code:"
           cat "${{ github.workspace }}/new_issues.log"
+          exit 1
         else
           echo "No new issues introduced by the PR"
         fi
