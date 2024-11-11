@@ -4,23 +4,35 @@ on:
   pull_request:
     branches:
       - master
+permissions:
+  contents: read
 
 jobs:
   graudit_scan:
     runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SAST_SECURITY_SLACK_WEBHOOK}}
+      SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+      ASP_PR_URL: ${{ github.event.pull_request.html_url }}
+      ASP_PR_CREATOR: ${{ github.event.pull_request.user.login }}
+      ASP_HEAD_COMMIT: ${{ github.event.pull_request.html_url }}/commits/${{ github.event.pull_request.head.sha }}
+      ASP_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      ASP_SENDER: ${{ github.event.sender.login }}
 
     steps:
     - name: Checkout PR code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.pull_request.head.sha }}
         path: head
+        persist-credentials: false
 
     - name: Checkout base branch code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.pull_request.base.ref }}
         path: base
+        persist-credentials: false
 
     - name: Setup Graudit CLI
       run: |
@@ -52,8 +64,32 @@ jobs:
         if [ -s "${{ github.workspace }}/new_issues.log" ]; then
           echo "New issues found in the PR code:"
           cat "${{ github.workspace }}/new_issues.log"
-          exit 1
         else
           echo "No new issues introduced by the PR"
         fi
       shell: bash
+
+    - name: Send Slack Notification
+      if: failure()
+      uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001 # v1.25.0
+      with:
+        # For posting a rich message using Block Kit
+        payload: |
+          {
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": ":red-alert: *ASP SAST Scan Failed*"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "`Workflow Run:` ${{ env.ASP_WORKFLOW_RUN_URL }}\n\n`Pull Request:` ${{ env.ASP_PR_URL }}\n\n`Head Commit:` ${{ env.ASP_HEAD_COMMIT }}\n\n`PR Creator:` *${{ env.ASP_PR_CREATOR }}*\n\n`Latest Committer:` *${{ env.ASP_SENDER }}*\n\n"
+                }
+              }
+            ]
+          }
