@@ -1,4 +1,4 @@
-name: GO Security Checks
+name: ASP Security Checks
 on:
   pull_request:
     branches:
