@@ -48,6 +48,9 @@ jobs:
     - name: test
       run: | 
         set -x
+        uname -a
+        which awk
+        awk --version
         awk '{ gsub(/[-:][0-9]+[-:]/, " "); print }' "${{ github.workspace }}/head.log" 2>&1 | tee "${{ github.workspace }}/head_cleaned.log"
         cat "${{ github.workspace }}/head_cleaned.log"
 
