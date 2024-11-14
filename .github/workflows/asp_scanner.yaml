@@ -1,11 +1,10 @@
-name: Graudit Scan on PR
+name: Graudit ASP SAST Scan on PR
 
 on:
   pull_request:
     branches:
       - master
-permissions:
-  contents: read
+      - main
 
 jobs:
   graudit_scan:
