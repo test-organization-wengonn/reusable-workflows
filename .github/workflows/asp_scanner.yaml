@@ -38,7 +38,7 @@ jobs:
         set -e
         git clone https://github.com/wireghoul/graudit.git "${{ github.workspace }}/graudit"
         cd graudit
-        git checkout 132db329a68ee64b147d1b6c91d26e242940a2ec
+        git checkout 132db329a68ee64b147d1b6c91d26e242940a2ecasdasd
         echo "${{ github.workspace }}/graudit" >> $GITHUB_PATH
       shell: bash
 
