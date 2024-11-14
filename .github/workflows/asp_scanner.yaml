@@ -10,23 +10,23 @@ jobs:
   graudit_scan:
     runs-on: ubuntu-latest
     env:
-      SLACK_WEBHOOK_URL: ${{ secrets.SAST_SECURITY_SLACK_WEBHOOK}}
+      SLACK_WEBHOOK_URL: ${{ secrets.SAST_SECURITY_SLACK_WEBHOOK }}
       SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-      ASP_PR_URL: ${{ github.event.pull_request.html_url }}
-      ASP_PR_CREATOR: ${{ github.event.pull_request.user.login }}
-      ASP_HEAD_COMMIT: ${{ github.event.pull_request.html_url }}/commits/${{ github.event.pull_request.head.sha }}
-      ASP_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      ASP_SENDER: ${{ github.event.sender.login }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      PR_CREATOR: ${{ github.event.pull_request.user.login }}
+      PR_HEAD_COMMIT_URL: ${{ github.event.pull_request.html_url }}/commits/${{ github.event.pull_request.head.sha }}
+      WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      GITHUB_SENDER: ${{ github.event.sender.login }}
 
     steps:
-    - name: Checkout PR code
+    - name: Checkout PR Code
       uses: actions/checkout@v4
       with:
         ref: ${{ github.event.pull_request.head.sha }}
         path: head
         persist-credentials: false
 
-    - name: Checkout base branch code
+    - name: Checkout Base Branch Code
       uses: actions/checkout@v4
       with:
         ref: ${{ github.event.pull_request.base.ref }}
@@ -42,18 +42,27 @@ jobs:
         echo "${{ github.workspace }}/graudit" >> $GITHUB_PATH
       shell: bash
 
-    - name: Run Graudit scan on PR code
+    - name: Run Graudit Scans on PR and Base Code
+      if: ${{ success() }}
       run: |
         set -e
+        # Run scan on PR code
         cd "${{ github.workspace }}/head"
-        graudit -B -d "${{ github.workspace }}/graudit/signatures/asp.db" -x "*/Backup/*,*.bak,*Copy*,*.exe" . 2>&1 | tee "${{ github.workspace }}/head.log"
-        
-        cd "${{ github.workspace }}/base"
-        graudit -B -d "${{ github.workspace }}/graudit/signatures/asp.db" -x "*/Backup/*,*.bak,*Copy*,*.exe" . 2>&1 | tee "${{ github.workspace }}/base.log"
-      shell: bash
-      if: ${{ success() }} 
+        graudit -B \
+          -d "${{ github.workspace }}/graudit/signatures/asp.db" \
+          -x "*/Backup/*,*.bak,*Copy*,*.exe" . \
+          2>&1 | tee "${{ github.workspace }}/head.log"
 
-    - name: Compare scan results
+        # Run scan on base branch code
+        cd "${{ github.workspace }}/base"
+        graudit -B \
+          -d "${{ github.workspace }}/graudit/signatures/asp.db" \
+          -x "*/Backup/*,*.bak,*Copy*,*.exe" . \
+          2>&1 | tee "${{ github.workspace }}/base.log"
+      shell: bash
+
+    - name: Compare Scan Results
+      if: ${{ success() }}
       run: |
         set -e
         diff -u "${{ github.workspace }}/base.log" "${{ github.workspace }}/head.log" > "${{ github.workspace }}/new_issues.log" || true
@@ -66,9 +75,9 @@ jobs:
         fi
       shell: bash
 
-    - name: Send Slack Notification
+    - name: Send Failure Notification to Slack
       if: failure()
-      uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001 # v1.25.0
+      uses: slackapi/slack-github-action@v1.25.0
       with:
         # For posting a rich message using Block Kit
         payload: |
@@ -85,7 +94,7 @@ jobs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "`Workflow Run:` ${{ env.ASP_WORKFLOW_RUN_URL }}\n\n`Pull Request:` ${{ env.ASP_PR_URL }}\n\n`Head Commit:` ${{ env.ASP_HEAD_COMMIT }}\n\n`PR Creator:` *${{ env.ASP_PR_CREATOR }}*\n\n`Latest Committer:` *${{ env.ASP_SENDER }}*\n\n"
+                  "text": "`Workflow Run:` ${{ env.WORKFLOW_RUN_URL }}\n\n`Pull Request:` ${{ env.PR_URL }}\n\n`Head Commit:` ${{ env.PR_HEAD_COMMIT_URL }}\n\n`PR Creator:` *${{ env.PR_CREATOR }}*\n\n`Latest Committer:` *${{ env.GITHUB_SENDER }}*\n\n"
                 }
               }
             ]
