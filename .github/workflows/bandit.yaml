@@ -30,7 +30,7 @@ jobs:
         run: |
           if [ -f bandit.json ]; then
             bandit -x .svn,CVS,.bzr,.hg,.git,__pycache__,.tox,.eggs,*.egg -r . -f json -b bandit.json -o bandit-output.json
-            q -r '.results[] | ">> Issue: [\(.test_id):\(.test_name)] \(.issue_text)\n   Severity: \(.issue_severity | ascii_upcase)   Confidence: \(.issue_confidence | ascii_upcase)\n   CWE: CWE-\(.issue_cwe.id) (\(.issue_cwe.link))\n   More Info: \(.more_info)\n   Location: \(.filename):\(.line_number):\(.col_offset)\nCode:\n\(.code)"' bandit-output.json
+            jq -r '.results[] | ">> Issue: [\(.test_id):\(.test_name)] \(.issue_text)\n   Severity: \(.issue_severity | ascii_upcase)   Confidence: \(.issue_confidence | ascii_upcase)\n   CWE: CWE-\(.issue_cwe.id) (\(.issue_cwe.link))\n   More Info: \(.more_info)\n   Location: \(.filename):\(.line_number):\(.col_offset)\nCode:\n\(.code)"' bandit-output.json
           else
             bandit -x .svn,CVS,.bzr,.hg,.git,__pycache__,.tox,.eggs,*.egg -r .
           fi
